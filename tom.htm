@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>GUIDR - Career Recommendation Platform</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #e6e9ed;
+    color: #290d0d;
+}
+
+section { padding: 50px 10%; }
+
+h1, h2, h3 { text-align: center; }
+
+.hero {
+    background: #42417c;
+    padding: 80px 10%;
+    color: white;
+}
+
+button {
+    padding: 8px 15px;
+    background: #2c7be5;
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+button:hover { background: #1a5fd0; }
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.progress-bar {
+    width: 100%;
+    background: #ddd;
+    height: 20px;
+    margin-top: 5px;
+}
+
+.progress {
+    height: 100%;
+    background: #2c7be5;
+}
+
+input, textarea {
+    padding: 6px;
+    margin: 5px 0;
+    width: 100%;
+}
+
+.hidden { display: none; }
+
+.skill-box {
+    border:1px solid #ccc;
+    padding:15px;
+    margin-bottom:20px;
+    border-radius:5px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<section id="loginSection" class="hero">
+    <h1>GUIDR Login</h1>
+    <div style="max-width:400px;margin:auto;">
+        <input type="text" id="name" placeholder="Enter Name">
+        <input type="text" id="userid" placeholder="Enter User ID">
+        <input type="password" id="password" placeholder="Enter Password">
+        <button onclick="login()">Login</button>
+    </div>
+</section>
+
+<div id="mainApp" class="hidden">
+
+<section class="hero">
+    <h1>GUIDR</h1>
+    <h3>Welcome, <span id="displayName"></span></h3>
+</section>
+
+<section id="analyzer">
+<h2>Career Analyzer</h2>
+
+<h3>Select Interests</h3>
+<div class="grid" id="interests"></div>
+<input type="text" id="customInterest" placeholder="Add Other Interest">
+<button onclick="addCustomOption('interest')">Add Interest</button>
+
+<h3>Select Skills</h3>
+<div class="grid" id="skills"></div>
+<input type="text" id="customSkill" placeholder="Add Other Skill">
+<button onclick="addCustomOption('skill')">Add Skill</button>
+
+<div style="text-align:center;">
+<button onclick="analyzeCareer()">Analyze Career</button>
+</div>
+
+<div id="result"></div>
+</section>
+
+<section id="dashboard">
+<h2>User Dashboard</h2>
+
+<div class="card">
+<h3>Profile</h3>
+<p><strong>Name:</strong> <span id="profileName"></span></p>
+<p><strong>User ID:</strong> <span id="profileId"></span></p>
+</div>
+
+<div class="card">
+<h3>Skill Progress Tracking</h3>
+<div id="progressTracking"></div>
+</div>
+
+</section>
+
+</div>
+
+<script>
+
+// ================= LOGIN =================
+function login(){
+let name=document.getElementById("name").value;
+let userid=document.getElementById("userid").value;
+let password=document.getElementById("password").value;
+
+if(name && userid && password){
+localStorage.setItem("guidrUser", JSON.stringify({name, userid}));
+
+document.getElementById("loginSection").classList.add("hidden");
+document.getElementById("mainApp").classList.remove("hidden");
+
+document.getElementById("displayName").innerText=name;
+document.getElementById("profileName").innerText=name;
+document.getElementById("profileId").innerText=userid;
+}else{
+alert("Please fill all fields");
+}
+}
+
+// ================= DATA =================
+
+const interestList = [
+"Analytical Thinking","Creative Design","Logical Reasoning",
+"Technology","Mathematics","Research & Innovation"
+];
+
+const skillList = [
+"Python","SQL","HTML","CSS","JavaScript","React",
+"Statistics","Machine Learning","Java","C++",
+"Cloud Computing","UI Design","Problem Solving"
+];
+
+const careers = {
+"Data Scientist": {
+interests:["Analytical Thinking","Mathematics","Research & Innovation"],
+skills:["Python","SQL","Statistics","Machine Learning"],
+demand:9,
+growthRate:22,
+avgSalary:1200000,
+trendingSkills:["Python","Machine Learning","AI","Cloud Computing"]
+},
+"Frontend Developer": {
+interests:["Creative Design","Technology"],
+skills:["HTML","CSS","JavaScript","React"],
+demand:8,
+growthRate:18,
+avgSalary:800000,
+trendingSkills:["React","JavaScript","UI Design","Next.js"]
+},
+"Software Engineer": {
+interests:["Logical Reasoning","Technology"],
+skills:["Java","C++","Problem Solving"],
+demand:9,
+growthRate:20,
+avgSalary:1100000,
+trendingSkills:["Cloud Computing","Java","DevOps","System Design"]
+}
+};
+
+function createCheckboxes(list, containerId){
+const container=document.getElementById(containerId);
+list.forEach(item=>{
+container.innerHTML+=`<label><input type="checkbox" value="${item}"> ${item}</label>`;
+});
+}
+createCheckboxes(interestList,"interests");
+createCheckboxes(skillList,"skills");
+
+// ================= ADD CUSTOM =================
+function addCustomOption(type){
+if(type==="interest"){
+let value=document.getElementById("customInterest").value.trim();
+if(value){
+document.getElementById("interests").innerHTML+=
+`<label><input type="checkbox" value="${value}" checked> ${value}</label>`;
+document.getElementById("customInterest").value="";
+}
+}else{
+let value=document.getElementById("customSkill").value.trim();
+if(value){
+document.getElementById("skills").innerHTML+=
+`<label><input type="checkbox" value="${value}" checked> ${value}</label>`;
+document.getElementById("customSkill").value="";
+}
+}
+}
+
+// ================= SMART ANALYSIS =================
+function analyzeCareer(){
+
+const selectedInterests=[...document.querySelectorAll("#interests input:checked")].map(cb=>cb.value);
+const selectedSkills=[...document.querySelectorAll("#skills input:checked")].map(cb=>cb.value);
+
+if(selectedInterests.length===0 && selectedSkills.length===0){
+alert("Select at least one option");
+return;
+}
+
+let results=[];
+
+for(let career in careers){
+let data=careers[career];
+
+let interestMatch=data.interests.filter(i=>selectedInterests.includes(i)).length/data.interests.length*100;
+let skillMatch=data.skills.filter(s=>selectedSkills.includes(s)).length/data.skills.length*100;
+let trendMatch=data.trendingSkills.filter(s=>selectedSkills.includes(s)).length/data.trendingSkills.length*100;
+
+let demandScore=data.demand*10;
+let growthScore=(data.growthRate/25)*100;
+
+let finalScore=
+(interestMatch*0.25)+
+(skillMatch*0.35)+
+(demandScore*0.15)+
+(growthScore*0.15)+
+(trendMatch*0.10);
+
+results.push({
+career,
+finalScore:Math.round(finalScore),
+missing:data.skills.filter(s=>!selectedSkills.includes(s)),
+salary:data.avgSalary,
+growth:data.growthRate,
+trendMatch:Math.round(trendMatch)
+});
+}
+
+results.sort((a,b)=>b.finalScore-a.finalScore);
+let top=results[0];
+
+let advice="";
+if(top.finalScore>80){
+advice="🔥 Excellent career choice! Strong alignment with industry trends.";
+}
+else if(top.finalScore>60){
+advice="👍 Good option. Improve trending skills to increase market value.";
+}
+else{
+advice="⚠ Moderate match. Focus on developing in-demand skills.";
+}
+
+document.getElementById("result").innerHTML=`
+<div class="card">
+<h3>🏆 Recommended Career: ${top.career}</h3>
+<p><strong>Overall Match:</strong> ${top.finalScore}%</p>
+<p><strong>Industry Growth:</strong> ${top.growth}% annually</p>
+<p><strong>Trending Skill Match:</strong> ${top.trendMatch}%</p>
+<p><strong>Average Salary (India Est.):</strong> ₹${top.salary.toLocaleString()}</p>
+<p><strong>Missing Skills:</strong> ${top.missing.join(", ")||"None"}</p>
+<p><strong>Market Advice:</strong> ${advice}</p>
+</div>
+`;
+
+generateProgressSection(top.missing);
+}
+
+// ================= PROGRESS =================
+function generateProgressSection(missingSkills){
+let savedProgress = JSON.parse(localStorage.getItem("skillProgress")) || {};
+let html="";
+
+missingSkills.forEach(skill=>{
+let data = savedProgress[skill] || { percent:0, description:"", rating:"Beginner ⭐" };
+
+html+=`
+<div class="skill-box">
+<p><strong>${skill}</strong></p>
+<div class="progress-bar">
+<div class="progress" style="width:${data.percent}%"></div>
+</div>
+
+<label>Completion %:</label>
+<input type="number" min="0" max="100" value="${data.percent}" id="percent-${skill}">
+<label>Describe Your Progress:</label>
+<textarea id="desc-${skill}" rows="3">${data.description}</textarea>
+
+<button onclick="updateProgress('${skill}')">Save / Update</button>
+<p><strong>Rating:</strong> ${data.rating}</p>
+</div>
+`;
+});
+
+document.getElementById("progressTracking").innerHTML=html;
+}
+
+function updateProgress(skill){
+
+let percent=parseInt(document.getElementById("percent-"+skill).value);
+let description=document.getElementById("desc-"+skill).value;
+
+if(percent<0 || percent>100 || isNaN(percent)){
+alert("Enter value between 0-100");
+return;
+}
+
+let rating="";
+if(percent<=25) rating="Beginner ⭐";
+else if(percent<=50) rating="Intermediate ⭐⭐";
+else if(percent<=75) rating="Advanced ⭐⭐⭐";
+else rating="Expert ⭐⭐⭐⭐";
+
+let savedProgress = JSON.parse(localStorage.getItem("skillProgress")) || {};
+savedProgress[skill]={percent,description,rating};
+
+localStorage.setItem("skillProgress", JSON.stringify(savedProgress));
+
+alert("Progress Updated Successfully!");
+generateProgressSection(Object.keys(savedProgress));
+}
+
+</script>
+
+</body>
+</html>
