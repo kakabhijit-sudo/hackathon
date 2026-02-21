@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>guidr</title>
+
+<style>
+body{
+margin:0;
+font-family:'Segoe UI',sans-serif;
+background:linear-gradient(135deg,#e3f2fd,#f5f7fa);
+}
+
+/* NAVIGATION */
+nav{
+background:#2c7be5;
+padding:15px 30px;
+color:white;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+nav button{
+background:white;
+color:#2c7be5;
+border:none;
+padding:6px 15px;
+border-radius:20px;
+cursor:pointer;
+margin-left:8px;
+}
+
+/* PAGES */
+.page{
+display:none;
+max-width:900px;
+margin:50px auto;
+background:white;
+padding:30px;
+border-radius:20px;
+box-shadow:0 10px 30px rgba(0,0,0,0.08);
+animation:fadeIn 0.4s ease;
+}
+
+.active{ display:block; }
+
+h2{ text-align:center; }
+
+input,select{
+width:100%;
+padding:10px;
+margin:8px 0;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+/* BUTTON */
+.primary{
+background:#2c7be5;
+color:white;
+border:none;
+padding:10px 25px;
+border-radius:25px;
+cursor:pointer;
+transition:0.3s;
+}
+
+.primary:hover{
+background:#1a5fd0;
+transform:scale(1.05);
+}
+
+/* PROGRESS */
+.progress-bar{
+background:#eee;
+border-radius:20px;
+overflow:hidden;
+margin-top:10px;
+}
+
+.progress{
+height:15px;
+border-radius:20px;
+transition:width 0.6s ease;
+}
+
+/* LOGIN */
+.login-container{
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.login-card{
+background:white;
+padding:40px;
+border-radius:20px;
+box-shadow:0 10px 30px rgba(0,0,0,0.1);
+width:350px;
+text-align:center;
+}
+
+/* PARENT TEST */
+.question-card{
+margin-bottom:20px;
+padding:15px;
+background:#f9fafc;
+border-radius:15px;
+}
+
+.options{
+display:flex;
+gap:6px;
+margin-top:10px;
+}
+
+.option-btn{
+flex:1;
+padding:6px;
+border-radius:8px;
+border:1px solid #ddd;
+background:white;
+cursor:pointer;
+}
+
+.option-btn.selected{
+background:#2c7be5;
+color:white;
+border:none;
+}
+
+@keyframes fadeIn{
+from{opacity:0; transform:translateY(10px);}
+to{opacity:1; transform:translateY(0);}
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage" class="login-container">
+<div class="login-card">
+<h2>guidr Login</h2>
+<input type="text" id="username" placeholder="Username">
+<input type="password" id="password" placeholder="Password">
+<button class="primary" onclick="login()">Login</button>
+</div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" style="display:none;">
+
+<nav>
+<span>guidr</span>
+<div>
+<button onclick="showPage('dashboardPage')">Dashboard</button>
+<button onclick="showPage('skillsPage')">Skills</button>
+<button onclick="showPage('parentPage')">Parent Test</button>
+<button onclick="logout()">Logout</button>
+</div>
+</nav>
+
+<!-- DASHBOARD -->
+<div id="dashboardPage" class="page">
+<h2>Career Recommendation</h2>
+
+<label>Select Your Interests</label>
+<select id="interest" multiple>
+<option value="technology">Technology</option>
+<option value="data">Data & Analytics</option>
+<option value="design">Design & Creativity</option>
+<option value="security">Cyber Security</option>
+<option value="problem-solving">Problem Solving</option>
+<option value="mathematics">Mathematics</option>
+</select>
+
+<label>Other Interests (comma separated)</label>
+<input type="text" id="otherInterest" placeholder="e.g. AI, Robotics, Finance">
+
+<label>Select Your Skills</label>
+<select id="skills" multiple>
+<option value="coding">Coding</option>
+<option value="analysis">Data Analysis</option>
+<option value="ui">UI Design</option>
+<option value="networking">Networking</option>
+<option value="logic">Logical Thinking</option>
+<option value="creativity">Creativity</option>
+</select>
+
+<label>Other Skills (comma separated)</label>
+<input type="text" id="otherSkills" placeholder="e.g. Python, Public Speaking">
+
+<button class="primary" onclick="recommendCareer()">Find Best Career</button>
+
+<div id="careerResult"></div>
+</div>
+
+<!-- SKILLS PAGE -->
+<div id="skillsPage" class="page">
+<h2>Skill Progress Tracking</h2>
+
+<input type="text" id="skillName" placeholder="Skill Name">
+<input type="number" id="skillPercent" placeholder="Completion % (0-100)">
+<input type="text" id="skillDesc" placeholder="Description">
+
+<button class="primary" onclick="updateProgress()">Save Progress</button>
+
+<div id="progressOutput"></div>
+</div>
+
+<!-- PARENT TEST -->
+<div id="parentPage" class="page">
+<h2>Parent Career Compatibility Assessment</h2>
+<div id="questionsContainer"></div>
+<button class="primary" onclick="calculateParentCompatibility()">Evaluate Compatibility</button>
+<div id="parentResult"></div>
+</div>
+
+</div>
+
+<script>
+
+/* LOGIN */
+function login(){
+if(username.value && password.value){
+localStorage.setItem("user",username.value);
+loginPage.style.display="none";
+mainApp.style.display="block";
+showPage("dashboardPage");
+}else{
+alert("Enter username & password");
+}
+}
+
+function logout(){
+localStorage.removeItem("user");
+location.reload();
+}
+
+if(localStorage.getItem("user")){
+loginPage.style.display="none";
+mainApp.style.display="block";
+showPage("dashboardPage");
+}
+
+/* NAVIGATION */
+function showPage(id){
+document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
+
+/* HELPER */
+function getSelectedValues(id){
+return Array.from(document.getElementById(id).selectedOptions).map(o=>o.value);
+}
+
+/* MARKET-ALIGNED CAREER ENGINE */
+function recommendCareer(){
+
+let userInterests=getSelectedValues("interest");
+let userSkills=getSelectedValues("skills");
+
+let otherInt=document.getElementById("otherInterest").value
+.toLowerCase().split(",")
+.map(i=>i.trim()).filter(i=>i!="");
+
+userInterests=userInterests.concat(otherInt);
+
+let otherSk=document.getElementById("otherSkills").value
+.toLowerCase().split(",")
+.map(s=>s.trim()).filter(s=>s!="");
+
+userSkills=userSkills.concat(otherSk);
+
+if(userInterests.length===0 || userSkills.length===0){
+alert("Select at least one interest and skill.");
+return;
+}
+
+const marketCareers=[
+{
+name:"AI / Machine Learning Engineer",
+coreInterests:["technology","data","mathematics"],
+coreSkills:["coding","python","machine learning","analysis"],
+trendingSkills:["ai","deep learning","python"]
+},
+{
+name:"Data Scientist",
+coreInterests:["data","mathematics","problem-solving"],
+coreSkills:["analysis","coding","statistics"],
+trendingSkills:["machine learning","python","sql"]
+},
+{
+name:"Cloud / DevOps Engineer",
+coreInterests:["technology","problem-solving"],
+coreSkills:["networking","automation","linux"],
+trendingSkills:["aws","azure","docker","kubernetes"]
+},
+{
+name:"Cyber Security Specialist",
+coreInterests:["security","technology"],
+coreSkills:["networking","logic"],
+trendingSkills:["cybersecurity","penetration testing"]
+},
+{
+name:"Full Stack Developer",
+coreInterests:["technology","problem-solving"],
+coreSkills:["coding","logic"],
+trendingSkills:["react","nodejs","javascript"]
+},
+{
+name:"UI/UX Designer",
+coreInterests:["design","creativity"],
+coreSkills:["ui","creativity"],
+trendingSkills:["figma","ux research"]
+}
+];
+
+let best=null;
+let highest=0;
+
+marketCareers.forEach(career=>{
+let score=0;
+
+career.coreInterests.forEach(i=>{
+if(userInterests.includes(i)) score+=12;
+});
+
+career.coreSkills.forEach(s=>{
+if(userSkills.includes(s)) score+=15;
+});
+
+career.trendingSkills.forEach(ts=>{
+if(userSkills.includes(ts)) score+=10;
+});
+
+if(score>highest){
+highest=score;
+best=career;
+}
+});
+
+let percent=Math.min(highest,100);
+
+careerResult.innerHTML=`
+<h3>Recommended Career: ${best.name}</h3>
+<p>Market-Aligned Match Score: ${percent}%</p>
+<div class="progress-bar">
+<div class="progress" style="width:${percent}%;background:#2c7be5;"></div>
+</div>
+`;
+}
+
+/* SKILL TRACKER */
+function updateProgress(){
+let skill=skillName.value;
+let percent=parseInt(skillPercent.value);
+let desc=skillDesc.value;
+
+if(percent<0 || percent>100 || isNaN(percent)){
+alert("Enter value 0-100");
+return;
+}
+
+let rating="";
+if(percent<=25) rating="Beginner ⭐";
+else if(percent<=50) rating="Intermediate ⭐⭐";
+else if(percent<=75) rating="Advanced ⭐⭐⭐";
+else rating="Expert ⭐⭐⭐⭐";
+
+progressOutput.innerHTML=`
+<p><strong>${skill}</strong></p>
+<p>${desc}</p>
+<p>${rating}</p>
+<div class="progress-bar">
+<div class="progress" style="width:${percent}%;background:#28a745;"></div>
+</div>
+`;
+}
+
+/* PARENT TEST */
+const questions=[
+"Logical reasoning ability?",
+"Enjoys problem solving?",
+"Consistent in tasks?",
+"Adapts to new technology?",
+"Shows creativity?",
+"Leadership qualities?",
+"Persistent during challenges?",
+"Comfortable with mathematics?",
+"Takes initiative independently?",
+"Explores new learning opportunities?"
+];
+
+questions.forEach((q,i)=>{
+let card=document.createElement("div");
+card.className="question-card";
+card.innerHTML="<strong>Q"+(i+1)+". "+q+"</strong>";
+
+let options=document.createElement("div");
+options.className="options";
+
+for(let v=1;v<=5;v++){
+let btn=document.createElement("button");
+btn.className="option-btn";
+btn.innerText=v;
+btn.onclick=function(){
+Array.from(options.children).forEach(b=>b.classList.remove("selected"));
+btn.classList.add("selected");
+btn.dataset.value=v;
+};
+options.appendChild(btn);
+}
+
+card.appendChild(options);
+questionsContainer.appendChild(card);
+});
+
+function calculateParentCompatibility(){
+let total=0,count=0;
+
+document.querySelectorAll(".question-card").forEach(card=>{
+let sel=card.querySelector(".selected");
+if(sel){
+total+=parseInt(sel.dataset.value);
+count++;
+}
+});
+
+if(count<questions.length){
+alert("Answer all questions");
+return;
+}
+
+let percent=(total/(questions.length*5))*100;
+
+parentResult.innerHTML=`
+<h3>Compatibility Score: ${percent.toFixed(1)}%</h3>
+<div class="progress-bar">
+<div class="progress" style="width:${percent}%;background:#2c7be5;"></div>
+</div>
+`;
+}
+
+</script>
+
+</body>
+</html>
